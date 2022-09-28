@@ -61,10 +61,26 @@ class ConvexHullSolver(QObject):
 	def compute_hull( self, points, pause, view):
 		self.pause = pause
 		self.view = view
-		assert( type(points) == list and type(points[0]) == QPointF )
+		assert (type(points) == list and type(points[0]) == QPointF)
 
 		t1 = time.time()
 		# create my linked list in ascending x value order here
+		xToPointDictionary = {}
+		sortedPoints = []
+		numbers = []
+		for point in points:
+			xToPointDictionary.update({point.x(): point})
+			numbers.append(point.x())
+
+		numbers.sort()
+		for number in numbers:
+			sortedPoints.append(xToPointDictionary.get(number))
+
+		if len(sortedPoints) < 4:
+			return sortedPoints
+
+
+
 
 		t2 = time.time()
 
