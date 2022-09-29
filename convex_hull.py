@@ -110,7 +110,7 @@ class ConvexHullSolver(QObject):
 		# self.showTangent([line], RED)
 		# when passing lines to the display, pass a list of QLineF objects.  Each QLineF
 		# object can be created with two QPointF objects corresponding to the endpoints
-		# self.showHull(polygon,RED)
+		self.showHull(polygon,RED)
 		self.showText('Time Elapsed (Convex Hull): {:3.3f} sec'.format(t4-t3))
 
 	def recurser(self,points):
@@ -141,17 +141,21 @@ class ConvexHullSolver(QObject):
 
 		# this is 12 to 6 in clock
 		begin = False
+		upperReached = False
 		for point in rightHalf:
 			if point.x() == upperTangentTuple[2]:
 				begin = True
+				upperReached = True
 			if begin:
 				combined.append(point)
-			if point.x() == lowerTangentTuple[2]:
+			if (point.x() == lowerTangentTuple[2]) and upperReached:
 				break
 
 		# this is 6 to 9 on clock
 		begin = False
 		for point in leftHalf:
+			if point in combined:
+				break
 			if point.x() == lowerTangentTuple[0]:
 				begin = True
 			if begin:
