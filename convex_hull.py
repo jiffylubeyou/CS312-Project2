@@ -76,18 +76,52 @@ class ConvexHullSolver(QObject):
 		for number in numbers:
 			sortedPoints.append(xToPointDictionary.get(number))
 
-		if len(sortedPoints) == 1:
-			return sortedPoints
+		points = self.recurser(sortedPoints)
 
-		leftHalf = sortedPoints[:len(sortedPoints)//2]
-		rightHalf = sortedPoints[len(sortedPoints)//2:]
+		last = QPointF
+		polygon = []
+		for point in points:
+			if point == points[0]:
+				last = point
+				continue
+			else:
+				polygon.append(QLineF(last, point))
+			last = point
+
+
+		t2 = time.time()
+
+		t3 = time.time()
+		# this is a dummy polygon of the first 3 unsorted points
+		# polygon = [QLineF(points[i],points[(i+1)%3]) for i in range(3)]
+		# TODO: REPLACE THE LINE ABOVE WITH A CALL TO YOUR DIVIDE-AND-CONQUER CONVEX HULL SOLVER
+		t4 = time.time()
+
+		# point1 = QPointF(upperTangentTuple[0], upperTangentTuple[1])
+		# point2 = QPointF(upperTangentTuple[2], upperTangentTuple[3])
+		# line = QLineF(point1, point2)
+		# self.showTangent([line], RED)
+		# when passing lines to the display, pass a list of QLineF objects.  Each QLineF
+		# object can be created with two QPointF objects corresponding to the endpoints
+		self.showHull(polygon,RED)
+		self.showText('Time Elapsed (Convex Hull): {:3.3f} sec'.format(t4-t3))
+
+	def recurser(self,points):
+
+		if len(points) < 3:
+			return points
+
+
+		leftHalf = points[:len(points) // 2]
+		rightHalf = points[len(points) // 2:]
 		# after this point, they should begin to be clockwise
-		leftHalf = self.compute_hull(leftHalf, pause, view)
-		rightHalf = self.compute_hull(rightHalf, pause, view)
+		leftHalf = self.recurser(leftHalf)
+		rightHalf = self.recurser(rightHalf)
 
 		# this combined should be the clockwise order of things
 		combined = []
 		upperTangentTuple = self.FindUpperTangent(leftHalf, rightHalf)
+		lowerTangentTuple = self.FindLowerTangent(leftHalf, rightHalf)
 
 		# This is 9 - 12 on clock
 		for point in leftHalf:
@@ -102,38 +136,37 @@ class ConvexHullSolver(QObject):
 				begin = True
 			if begin:
 				combined.append(point)
+			if point.x() == lowerTangentTuple[2]:
+				break
 
+		# this is 6 to 9 on clock
+		begin = False
+		for point in leftHalf:
+			if point.x() == lowerTangentTuple[0]:
+				begin = True
+			if begin:
+				combined.append(point)
 
+		return combined
 
-		t2 = time.time()
-
-		t3 = time.time()
-		# this is a dummy polygon of the first 3 unsorted points
-		polygon = [QLineF(points[i],points[(i+1)%3]) for i in range(3)]
-		# TODO: REPLACE THE LINE ABOVE WITH A CALL TO YOUR DIVIDE-AND-CONQUER CONVEX HULL SOLVER
-		t4 = time.time()
-
-		upperTangentTuple = self.FindUpperTangent(leftHalf,rightHalf)
-		point1 = QPointF(upperTangentTuple[0], upperTangentTuple[1])
-		point2 = QPointF(upperTangentTuple[2], upperTangentTuple[3])
-		line = QLineF(point1, point2)
-		self.showTangent([line], RED)
-
-
-		# when passing lines to the display, pass a list of QLineF objects.  Each QLineF
-		# object can be created with two QPointF objects corresponding to the endpoints
-		self.showHull(polygon,RED)
-		self.showText('Time Elapsed (Convex Hull): {:3.3f} sec'.format(t4-t3))
 
 
 	# takes in two arrays, both of which are an array of points, and returns a line object
 	def FindUpperTangent(self, L, R):
-		pStuff = self.findRightMostPoint(L)[0]
-		qStuff = self.findLeftMostPoint(R)[0]
+		pStuff = self.findRightMostPoint(L)
+		qStuff = self.findLeftMostPoint(R)
 		p = pStuff[0]
 		i = pStuff[1]
+		if i == 0:
+			i = len(L) - 1
+		else:
+			i = i - 1
 		q = qStuff[0]
 		j = qStuff[1]
+		if j == len(R) - 1:
+			j = 0
+		else:
+			j = j + 1
 		temp = (p.x(), p.y(), q.x(), q.y())
 		done = 0
 		while done == 0:
@@ -141,34 +174,60 @@ class ConvexHullSolver(QObject):
 			while self.findSlope(temp) > self.findSlope((L[i].x(), L[i].y(), q.x(), q.y())):
 				p = L[i]
 				temp = (p.x(), p.y(), q.x(), q.y())
-				i = i - 1
+				if i == 0:
+					i = len(L) - 1
+				else:
+					i = i - 1
 				done = 0
 			while self.findSlope(temp) < self.findSlope((p.x(), p.y(), R[j].x(), R[j].y())):
 				q = R[j]
 				temp = (p.x(), p.y(), q.x(), q.y())
-				j = j + 1
+				if j == len(R) - 1:
+					j = 0
+				else:
+					j = j + 1
 				done = 0
 		return temp
 
 
 	def FindLowerTangent(self, L, R):
-		p = L[-1]
-		q = R[0]
+		pStuff = self.findRightMostPoint(L)
+		qStuff = self.findLeftMostPoint(R)
+		p = pStuff[0]
+		i = pStuff[1]
+		if i == len(L) - 1:
+			i = 0
+		else:
+			i = i + 1
+		q = qStuff[0]
+		j = qStuff[1]
+		if j == 0:
+			j = len(R) - 1
+		else:
+			j = j - 1
 		temp = (p.x(), p.y(), q.x(), q.y())
 		done = 0
-		i = -2
-		j = 1
 		while done == 0:
 			done = 1
-			while self.findSlope(temp) > self.findSlope((L[i].x(), L[i].y(), q.x(), q.y())):
+			# erase this
+			number = self.findSlope(temp)
+			otherNumber = self.findSlope((L[i].x(), L[i].y(), q.x(), q.y()))
+			# erase this ^
+			while self.findSlope(temp) < self.findSlope((L[i].x(), L[i].y(), q.x(), q.y())):
 				p = L[i]
 				temp = (p.x(), p.y(), q.x(), q.y())
-				i = i - 1
+				if i == len(L) - 1:
+					i = 0
+				else:
+					i = i + 1
 				done = 0
-			while self.findSlope(temp) < self.findSlope((p.x(), p.y(), R[j].x(), R[j].y())):
+			while self.findSlope(temp) > self.findSlope((p.x(), p.y(), R[j].x(), R[j].y())):
 				q = R[j]
 				temp = (p.x(), p.y(), q.x(), q.y())
-				j = j + 1
+				if j == 0:
+					j = len(R) - 1
+				else:
+					j = j - 1
 				done = 0
 		return temp
 
