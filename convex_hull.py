@@ -94,7 +94,7 @@ class ConvexHullSolver(QObject):
 			else:
 				polygon.append(QLineF(last, point))
 			last = point
-
+		polygon.append(QLineF(points[0], points[-1]))
 
 		t2 = time.time()
 
@@ -117,9 +117,6 @@ class ConvexHullSolver(QObject):
 
 		if len(points) < 3:
 			return points
-		# delete this
-		self.showTangent([QLineF(points[0], points[1])], GREEN)
-		# delete this ^
 
 
 		leftHalf = points[:len(points) // 2]
@@ -154,10 +151,10 @@ class ConvexHullSolver(QObject):
 		# this is 6 to 9 on clock
 		begin = False
 		for point in leftHalf:
-			if point in combined:
-				break
 			if point.x() == lowerTangentTuple[0]:
 				begin = True
+			if point in combined and begin:
+				break
 			if begin:
 				combined.append(point)
 
