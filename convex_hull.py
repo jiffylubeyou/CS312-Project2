@@ -111,7 +111,7 @@ class ConvexHullSolver(QObject):
 		# when passing lines to the display, pass a list of QLineF objects.  Each QLineF
 		# object can be created with two QPointF objects corresponding to the endpoints
 		self.showHull(polygon,RED)
-		self.showText('Time Elapsed (Convex Hull): {:3.3f} sec'.format(t4-t3))
+		self.showText('Time Elapsed (Convex Hull): {:3.3f} sec'.format(t2-t1))
 
 	def recurser(self,points):
 
