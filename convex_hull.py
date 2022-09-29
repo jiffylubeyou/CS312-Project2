@@ -76,9 +76,23 @@ class ConvexHullSolver(QObject):
 		for number in numbers:
 			sortedPoints.append(xToPointDictionary.get(number))
 
-		if len(sortedPoints) < 4:
+		if len(sortedPoints) == 1:
 			return sortedPoints
 
+		leftHalf = sortedPoints[:len(sortedPoints)//2]
+		rightHalf = sortedPoints[len(sortedPoints)//2:]
+		# self.compute_hull(leftHalf, pause, view)
+		# self.compute_hull(rightHalf, pause, view)
+
+		combined = []
+		upperTangentTuple = self.FindUpperTangent(leftHalf, rightHalf)
+
+		for point in leftHalf:
+			combined.append(leftHalf)
+			if point.x() == upperTangentTuple[0]:
+				break
+
+		for point in rightHalf
 
 
 
@@ -90,10 +104,78 @@ class ConvexHullSolver(QObject):
 		# TODO: REPLACE THE LINE ABOVE WITH A CALL TO YOUR DIVIDE-AND-CONQUER CONVEX HULL SOLVER
 		t4 = time.time()
 
+		upperTangentTuple = self.FindUpperTangent(leftHalf,rightHalf)
+		point1 = QPointF(upperTangentTuple[0], upperTangentTuple[1])
+		point2 = QPointF(upperTangentTuple[2], upperTangentTuple[3])
+		line = QLineF(point1, point2)
+		self.showTangent([line], RED)
+
+
 		# when passing lines to the display, pass a list of QLineF objects.  Each QLineF
 		# object can be created with two QPointF objects corresponding to the endpoints
 		self.showHull(polygon,RED)
 		self.showText('Time Elapsed (Convex Hull): {:3.3f} sec'.format(t4-t3))
 
 
+	# takes in two arrays, both of which are an array of points, and returns a line object
+	def FindUpperTangent(self, L, R):
+		p = L[-1]
+		q = R[0]
+		temp = (p.x(), p.y(), q.x(), q.y())
+		done = 0
+		i = -2
+		j = 1
+		while done == 0:
+			done = 1
+			while self.findSlope(temp) > self.findSlope((L[i].x(), L[i].y(), q.x(), q.y())):
+				p = L[i]
+				temp = (p.x(), p.y(), q.x(), q.y())
+				i = i - 1
+				done = 0
+			while self.findSlope(temp) < self.findSlope((p.x(), p.y(), R[j].x(), R[j].y())):
+				q = R[j]
+				temp = (p.x(), p.y(), q.x(), q.y())
+				j = j + 1
+				done = 0
+		return temp
 
+
+	def FindLowerTangent(self, L, R):
+		p = L[-1]
+		q = R[0]
+		temp = (p.x(), p.y(), q.x(), q.y())
+		done = 0
+		i = -2
+		j = 1
+		while done == 0:
+			done = 1
+			while self.findSlope(temp) > self.findSlope((L[i].x(), L[i].y(), q.x(), q.y())):
+				p = L[i]
+				temp = (p.x(), p.y(), q.x(), q.y())
+				i = i - 1
+				done = 0
+			while self.findSlope(temp) < self.findSlope((p.x(), p.y(), R[j].x(), R[j].y())):
+				q = R[j]
+				temp = (p.x(), p.y(), q.x(), q.y())
+				j = j + 1
+				done = 0
+		return temp
+
+	# takes in a QLineF line object
+	def findSlope(self, myLine):
+		return (myLine[1] - myLine[3] / (myLine[0] - myLine[2]))
+
+	# give list of points, returns a point object
+	def findRightMostPoint(self, myPointList):
+		xToPointDictionary = {}
+		sortedPoints = []
+		numbers = []
+		for point in myPointList:
+			xToPointDictionary.update({point.x(): point})
+			numbers.append(point.x())
+
+		numbers.sort()
+		for number in numbers:
+			sortedPoints.append(xToPointDictionary.get(number))
+
+		return sortedPoints[-1]
