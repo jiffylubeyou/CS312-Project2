@@ -63,6 +63,13 @@ class ConvexHullSolver(QObject):
 		self.view = view
 		assert (type(points) == list and type(points[0]) == QPointF)
 
+		# # erase this (test for the upper and lower tangent finders)
+		# L = [QPointF(-.75,0), QPointF(-.5,-.5)]
+		# R = [QPointF(.25,0), QPointF(.6,.5)]
+		# checkMe = self.FindLowerTangent(L,R)
+		# return
+		# # erase this ^
+
 		t1 = time.time()
 		# create my linked list in ascending x value order here
 		xToPointDictionary = {}
@@ -103,13 +110,16 @@ class ConvexHullSolver(QObject):
 		# self.showTangent([line], RED)
 		# when passing lines to the display, pass a list of QLineF objects.  Each QLineF
 		# object can be created with two QPointF objects corresponding to the endpoints
-		self.showHull(polygon,RED)
+		# self.showHull(polygon,RED)
 		self.showText('Time Elapsed (Convex Hull): {:3.3f} sec'.format(t4-t3))
 
 	def recurser(self,points):
 
 		if len(points) < 3:
 			return points
+		# delete this
+		self.showTangent([QLineF(points[0], points[1])], GREEN)
+		# delete this ^
 
 
 		leftHalf = points[:len(points) // 2]
@@ -171,6 +181,10 @@ class ConvexHullSolver(QObject):
 		done = 0
 		while done == 0:
 			done = 1
+			slope1 = self.findSlope(temp)
+			slope2 = self.findSlope((L[i].x(), L[i].y(), q.x(), q.y()))
+			point = (L[i].x(), L[i].y())
+			point2 = (q.x(), q.y())
 			while self.findSlope(temp) > self.findSlope((L[i].x(), L[i].y(), q.x(), q.y())):
 				p = L[i]
 				temp = (p.x(), p.y(), q.x(), q.y())
@@ -233,7 +247,7 @@ class ConvexHullSolver(QObject):
 
 	# takes in a QLineF line object
 	def findSlope(self, myLine):
-		return (myLine[1] - myLine[3] / (myLine[0] - myLine[2]))
+		return ((myLine[1] - myLine[3]) / (myLine[0] - myLine[2]))
 
 	# give list of points, returns a point object and index on where that point was
 	def findRightMostPoint(self, myPointList):
